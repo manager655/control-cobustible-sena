@@ -4,79 +4,61 @@
     <meta charset="UTF-8">
     <title>Panel del Administrador</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 10px;
-        }
-        h1 {
-            color: #333;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table, th, td {
-            border: 1px solid #aaa;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        form {
-            margin-top: 20px;
-        }
-        .btn {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            cursor: pointer;
-        }
-        .btn-rojo {
-            background-color: red;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #ddd; }
+        .formulario { margin-top: 40px; background: #fff; padding: 20px; border-radius: 8px; width: 400px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="number"] { width: 100%; padding: 8px; margin-bottom: 10px; }
+        input[type="submit"] { background-color: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
+        input[type="submit"]:hover { background-color: #218838; }
+        .btn-eliminar { background-color: red; color: white; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>Panel del Administrador</h1>
 
-    <h2>Registros actuales</h2>
+    <h2>Registros de Compras</h2>
+    {% if registros %}
     <table>
         <tr>
             <th>#</th>
             <th>Carnet</th>
             <th>Nombre</th>
-            <th>Chasis</th>
+            <th>Chasis/Placa</th>
             <th>Tipo</th>
             <th>Fecha</th>
             <th>Eliminar</th>
         </tr>
-        {% for i, r in enumerate(registros) %}
+        {% for i, registro in enumerate(registros) %}
         <tr>
             <td>{{ i + 1 }}</td>
-            <td>{{ r.carnet }}</td>
-            <td>{{ r.nombre }}</td>
-            <td>{{ r.chasis }}</td>
-            <td>{{ r.tipo }}</td>
-            <td>{{ r.fecha }}</td>
-            <td><a class="btn btn-rojo" href="{{ url_for('eliminar', indice=i) }}">Eliminar</a></td>
+            <td>{{ registro.carnet }}</td>
+            <td>{{ registro.nombre }}</td>
+            <td>{{ registro.chasis }}</td>
+            <td>{{ registro.tipo }}</td>
+            <td>{{ registro.fecha }}</td>
+            <td><a href="{{ url_for('eliminar', indice=i) }}"><button class="btn-eliminar">Eliminar</button></a></td>
         </tr>
         {% endfor %}
     </table>
+    {% else %}
+        <p>No hay registros actualmente.</p>
+    {% endif %}
 
-    <h2>Configuración de litros asignados</h2>
-    <form method="POST" action="/config">
-        <label for="litros_moto">Litros para motos:</label>
-        <input type="number" name="litros_moto" value="{{ config.litros_moto }}" required><br><br>
+    <div class="formulario">
+        <h3>Configuración de litros por vehículo</h3>
+        <form action="{{ url_for('actualizar_config') }}" method="POST">
+            <label for="litros_moto">Litros para motocicleta:</label>
+            <input type="number" name="litros_moto" id="litros_moto" value="{{ config.litros_moto }}" required>
 
-        <label for="litros_auto">Litros para autos:</label>
-        <input type="number" name="litros_auto" value="{{ config.litros_auto }}" required><br><br>
+            <label for="litros_auto">Litros para automóvil:</label>
+            <input type="number" name="litros_auto" id="litros_auto" value="{{ config.litros_auto }}" required>
 
-        <button type="submit" class="btn">Actualizar configuración</button>
-    </form>
-
-    <br><br>
-    <a class="btn" href="/">Volver al inicio</a>
+            <input type="submit" value="Actualizar">
+        </form>
+    </div>
 </body>
 </html>
