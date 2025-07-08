@@ -93,7 +93,7 @@ def admin():
 def panel():
     if not session.get("admin"):
         return redirect(url_for("admin"))
-    return render_template("admin_panel.html", registros=compras, config=config)
+    return render_template("admin_panel.html", registros=compras, config=config, motos=motos_robadas)
 
 # Eliminar un registro
 @app.route("/eliminar/<int:indice>")

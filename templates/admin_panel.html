@@ -19,31 +19,30 @@
 </head>
 <body>
     <h1>Panel del Administrador</h1>
+    <h2>Registros actuales</h2>
+<table border="1">
+    <tr>
+        <th>#</th>
+        <th>Carnet</th>
+        <th>Nombre</th>
+        <th>Chasis</th>
+        <th>Tipo</th>
+        <th>Fecha</th>
+        <th>Acción</th>
+    </tr>
+    {% for i, r in enumerate(registros) %}
+    <tr>
+        <td>{{ i }}</td>
+        <td>{{ r.carnet }}</td>
+        <td>{{ r.nombre }}</td>
+        <td>{{ r.chasis }}</td>
+        <td>{{ r.tipo }}</td>
+        <td>{{ r.fecha }}</td>
+        <td><a href="/eliminar/{{ i }}" onclick="return confirm('¿Eliminar este registro?')">Eliminar</a></td>
+    </tr>
+    {% endfor %}
+</table>
 
-    <h2>Registros de Compras</h2>
-    {% if registros %}
-    <table>
-        <tr>
-            <th>#</th>
-            <th>Carnet</th>
-            <th>Nombre</th>
-            <th>Chasis/Placa</th>
-            <th>Tipo</th>
-            <th>Fecha</th>
-            <th>Eliminar</th>
-        </tr>
-        {% for i, registro in enumerate(registros) %}
-        <tr>
-            <td>{{ i + 1 }}</td>
-            <td>{{ registro.carnet }}</td>
-            <td>{{ registro.nombre }}</td>
-            <td>{{ registro.chasis }}</td>
-            <td>{{ registro.tipo }}</td>
-            <td>{{ registro.fecha }}</td>
-            <td><a href="{{ url_for('eliminar', indice=i) }}"><button class="btn-eliminar">Eliminar</button></a></td>
-        </tr>
-        {% endfor %}
-    </table>
     {% else %}
         <p>No hay registros actualmente.</p>
     {% endif %}
