@@ -30,17 +30,17 @@
         <th>Fecha</th>
         <th>Acción</th>
     </tr>
-    {% for i, r in enumerate(registros) %}
-    <tr>
-        <td>{{ i }}</td>
-        <td>{{ r.carnet }}</td>
-        <td>{{ r.nombre }}</td>
-        <td>{{ r.chasis }}</td>
-        <td>{{ r.tipo }}</td>
-        <td>{{ r.fecha }}</td>
-        <td><a href="/eliminar/{{ i }}" onclick="return confirm('¿Eliminar este registro?')">Eliminar</a></td>
-    </tr>
-    {% endfor %}
+    {% for registro in registros %}
+<tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ registro.carnet }}</td>
+    <td>{{ registro.nombre }}</td>
+    <td>{{ registro.chasis }}</td>
+    <td>{{ registro.tipo }}</td>
+    <td>{{ registro.fecha }}</td>
+    <td><a class="eliminar" href="/eliminar/{{ loop.index0 }}">Eliminar</a></td>
+</tr>
+{% endfor %}
 </table>
 
     {% else %}
