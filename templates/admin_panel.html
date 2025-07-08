@@ -2,62 +2,80 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel del Administrador</title>
+    <title>Panel de Administración</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        h1 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #ddd; }
-        .formulario { margin-top: 40px; background: #fff; padding: 20px; border-radius: 8px; width: 400px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="number"] { width: 100%; padding: 8px; margin-bottom: 10px; }
-        input[type="submit"] { background-color: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
-        input[type="submit"]:hover { background-color: #218838; }
-        .btn-eliminar { background-color: red; color: white; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table, th, td {
+            border: 1px solid #999;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+        }
+        .eliminar {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h1>Panel del Administrador</h1>
+
     <h2>Registros actuales</h2>
-<table border="1">
-    <tr>
-        <th>#</th>
-        <th>Carnet</th>
-        <th>Nombre</th>
-        <th>Chasis</th>
-        <th>Tipo</th>
-        <th>Fecha</th>
-        <th>Acción</th>
-    </tr>
-    {% for registro in registros %}
-<tr>
-    <td>{{ loop.index }}</td>
-    <td>{{ registro.carnet }}</td>
-    <td>{{ registro.nombre }}</td>
-    <td>{{ registro.chasis }}</td>
-    <td>{{ registro.tipo }}</td>
-    <td>{{ registro.fecha }}</td>
-    <td><a class="eliminar" href="/eliminar/{{ loop.index0 }}">Eliminar</a></td>
-</tr>
-{% endfor %}
-</table>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Carnet</th>
+                <th>Nombre</th>
+                <th>Chasis/Placa</th>
+                <th>Tipo</th>
+                <th>Fecha</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if registros %}
+                {% for registro in registros %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ registro.carnet }}</td>
+                    <td>{{ registro.nombre }}</td>
+                    <td>{{ registro.chasis }}</td>
+                    <td>{{ registro.tipo }}</td>
+                    <td>{{ registro.fecha }}</td>
+                    <td><a class="eliminar" href="/eliminar/{{ loop.index0 }}">Eliminar</a></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7">No hay registros</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
 
-    {% else %}
-        <p>No hay registros actualmente.</p>
-    {% endif %}
+    <h2>Configurar cantidad de gasolina</h2>
+    <form method="post" action="/config">
+        <label for="litros_moto">Litros por motocicleta:</label>
+        <input type="number" name="litros_moto" value="{{ config.litros_moto }}" min="1" required><br><br>
+        <label for="litros_auto">Litros por automóvil:</label>
+        <input type="number" name="litros_auto" value="{{ config.litros_auto }}" min="1" required><br><br>
+        <button type="submit">Actualizar configuración</button>
+    </form>
 
-    <div class="formulario">
-        <h3>Configuración de litros por vehículo</h3>
-        <form action="{{ url_for('actualizar_config') }}" method="POST">
-            <label for="litros_moto">Litros para motocicleta:</label>
-            <input type="number" name="litros_moto" id="litros_moto" value="{{ config.litros_moto }}" required>
-
-            <label for="litros_auto">Litros para automóvil:</label>
-            <input type="number" name="litros_auto" id="litros_auto" value="{{ config.litros_auto }}" required>
-
-            <input type="submit" value="Actualizar">
-        </form>
-    </div>
+    <h2>Motos reportadas como robadas</h2>
+    <ul>
+        {% if motos %}
+            {% for moto in motos %}
+                <li>{{ moto }}</li>
+            {% endfor %}
+        {% else %}
+            <li>No hay motos reportadas como robadas</li>
+        {% endif %}
+    </ul>
 </body>
 </html>
