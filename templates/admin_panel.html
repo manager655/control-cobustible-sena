@@ -2,31 +2,44 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Administración</title>
+    <title>Panel del Administrador</title>
     <style>
-        body { font-family: Arial; background: #f0f0f0; padding: 20px; }
-        h1 { color: #444; }
-        table { border-collapse: collapse; width: 100%; background: #fff; margin-bottom: 20px; }
-        th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-        form { margin-bottom: 20px; background: #fff; padding: 15px; border: 1px solid #ccc; }
-        input[type=number] { width: 80px; padding: 5px; }
-        input[type=submit] { padding: 5px 15px; background: green; color: white; border: none; }
-        .btn-eliminar { color: white; background: red; padding: 4px 10px; text-decoration: none; border-radius: 4px; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #aaa;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        form {
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        .btn-rojo {
+            background-color: red;
+        }
     </style>
 </head>
 <body>
-    <h1>Panel de Administración</h1>
-
-    <h2>Modificar litros asignados</h2>
-    <form action="/config" method="POST">
-        <label for="litros_moto">Litros por moto:</label>
-        <input type="number" name="litros_moto" value="{{ config.litros_moto }}" required>
-        &nbsp;&nbsp;
-        <label for="litros_auto">Litros por auto:</label>
-        <input type="number" name="litros_auto" value="{{ config.litros_auto }}" required>
-        &nbsp;&nbsp;
-        <input type="submit" value="Guardar">
-    </form>
+    <h1>Panel del Administrador</h1>
 
     <h2>Registros actuales</h2>
     <table>
@@ -39,17 +52,31 @@
             <th>Fecha</th>
             <th>Eliminar</th>
         </tr>
-        {% for r in registros %}
+        {% for i, r in enumerate(registros) %}
         <tr>
-            <td>{{ loop.index0 }}</td>
+            <td>{{ i + 1 }}</td>
             <td>{{ r.carnet }}</td>
             <td>{{ r.nombre }}</td>
             <td>{{ r.chasis }}</td>
             <td>{{ r.tipo }}</td>
             <td>{{ r.fecha }}</td>
-            <td><a class="btn-eliminar" href="/eliminar/{{ loop.index0 }}">Eliminar</a></td>
+            <td><a class="btn btn-rojo" href="{{ url_for('eliminar', indice=i) }}">Eliminar</a></td>
         </tr>
         {% endfor %}
     </table>
+
+    <h2>Configuración de litros asignados</h2>
+    <form method="POST" action="/config">
+        <label for="litros_moto">Litros para motos:</label>
+        <input type="number" name="litros_moto" value="{{ config.litros_moto }}" required><br><br>
+
+        <label for="litros_auto">Litros para autos:</label>
+        <input type="number" name="litros_auto" value="{{ config.litros_auto }}" required><br><br>
+
+        <button type="submit" class="btn">Actualizar configuración</button>
+    </form>
+
+    <br><br>
+    <a class="btn" href="/">Volver al inicio</a>
 </body>
 </html>
