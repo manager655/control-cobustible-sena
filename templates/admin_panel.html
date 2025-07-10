@@ -2,119 +2,99 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Administración</title>
+    <title>Panel de Administrador</title>
     <style>
-        body { font-family: Arial; padding: 20px; background-color: #f4f4f4; }
-        h2 { color: #2c3e50; }
-        section { margin-bottom: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px #ccc; }
-        label, input, select { display: block; margin: 10px 0; }
-        button { margin-top: 10px; padding: 8px 15px; background: #2c3e50; color: white; border: none; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        h2 { color: #444; }
+        form, .registro-box, .config-box { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        label { display: block; margin-top: 10px; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; margin-top: 5px; }
+        input[type="submit"], button { margin-top: 15px; padding: 10px 20px; background: #1976d2; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        input[type="submit"]:hover, button:hover { background: #125ea7; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; }
         th { background-color: #eee; }
-        .oculto { display: none; }
+        .reset-btn { background: #d32f2f; }
+        @media (max-width: 600px) {
+            input, select, button { font-size: 1em; }
+            table, thead, tbody, th, td, tr { font-size: 0.9em; }
+        }
     </style>
 </head>
 <body>
-    <h1>Panel del Administrador</h1>
+    <h2>Configuración de Combustible</h2>
+    <form method="post" action="/config" class="config-box">
+        <label for="litros_moto">Litros por motocicleta:</label>
+        <input type="number" name="litros_moto" value="{{ config.litros_moto }}" required>
+        
+        <label for="litros_auto">Litros por automóvil:</label>
+        <input type="number" name="litros_auto" value="{{ config.litros_auto }}" required>
+        
+        <input type="submit" value="Guardar Cambios">
+    </form>
 
-    <!-- Sección 1: Configuración de litros -->
-    <section>
-        <h2>Configuración de combustible</h2>
-        <form action="/config" method="post">
-            <label>Litros por motocicleta: <input type="number" name="litros_moto" value="{{ config.litros_moto }}" required></label>
-            <label>Litros por automóvil: <input type="number" name="litros_auto" value="{{ config.litros_auto }}" required></label>
-            <button type="submit">Actualizar configuración</button>
-        </form>
-    </section>
+    <h2>Formulario de Registro de Ventas</h2>
+    <form method="post" action="/registrar" class="registro-box" id="formulario">
+        <label for="carnet">Carnet:</label>
+        <input type="text" name="carnet" id="carnet" required>
 
-    <!-- Sección 2: Lista de registros -->
-    <section>
-        <h2>Registros de compra</h2>
-        <button onclick="window.print()">Imprimir registros</button>
-        <table>
-            <tr><th>#</th><th>Carnet</th><th>Nombre</th><th>Chasis</th><th>Tipo</th><th>Fecha</th><th>Eliminar</th></tr>
+        <label for="nombre">Nombre:</label>
+        <input type="text" name="nombre" id="nombre" required>
+
+        <label for="chasis">Chasis/Placa:</label>
+        <input type="text" name="chasis" id="chasis" required>
+
+        <label for="tipo">Tipo de Vehículo:</label>
+        <select name="tipo" required>
+            <option value="Motocicleta">Motocicleta</option>
+            <option value="Automóvil">Automóvil</option>
+        </select>
+
+        <input type="submit" value="Registrar">
+    </form>
+
+    <form method="post" action="/resetear">
+        <button type="submit" class="reset-btn">Habilitar Siguiente Compra</button>
+    </form>
+
+    <h2>Lista de Compras Registradas</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Carnet</th>
+                <th>Nombre</th>
+                <th>Chasis</th>
+                <th>Tipo</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
             {% for r in registros %}
             <tr>
-                <td>{{ loop.index }}</td>
                 <td>{{ r.carnet }}</td>
                 <td>{{ r.nombre }}</td>
                 <td>{{ r.chasis }}</td>
                 <td>{{ r.tipo }}</td>
                 <td>{{ r.fecha }}</td>
-                <td><a href="/eliminar/{{ loop.index0 }}">Eliminar</a></td>
             </tr>
             {% endfor %}
-        </table>
-    </section>
-
-    <!-- Botón para mostrar/ocultar la tercera sección -->
-    <button onclick="document.getElementById('registro_manual').classList.toggle('oculto')">
-        Mostrar/Ocultar Registro Manual
-    </button>
-
-    <!-- Sección 3: Registro manual -->
-    <section id="registro_manual" class="oculto">
-        <h2>Registro de nueva venta de combustible</h2>
-        <form action="/registrar" method="post" id="form_registro">
-            <label>Carnet:
-                <input type="text" name="carnet" id="carnet" required onblur="autocompletar()">
-            </label>
-            <label>Nombre:
-                <input type="text" name="nombre" id="nombre" required>
-            </label>
-            <label>Chasis/Placa:
-                <input type="text" name="chasis" id="chasis" required>
-            </label>
-            <label>Tipo de vehículo:
-                <select name="tipo" required>
-                    <option value="Motocicleta">Motocicleta</option>
-                    <option value="Automóvil">Automóvil</option>
-                </select>
-            </label>
-            <button type="submit">Registrar compra</button>
-        </form>
-
-        <!-- Reseteo manual -->
-        <h3>Habilitar nueva compra (no borra historial)</h3>
-        <form onsubmit="return resetearCompras()" method="post">
-            <label>Contraseña:
-                <input type="password" id="clave_reset" required>
-            </label>
-            <button type="submit">Resetear compras actuales</button>
-        </form>
-
-        <!-- Totales -->
-        <p>Total litros motos: {{ config.litros_moto * registros|selectattr('tipo', 'equalto', 'Motocicleta')|list|length }}</p>
-        <p>Total litros autos: {{ config.litros_auto * registros|selectattr('tipo', 'equalto', 'Automóvil')|list|length }}</p>
-    </section>
+        </tbody>
+    </table>
 
     <script>
-        function autocompletar() {
-            const carnet = document.getElementById("carnet").value;
+        // Autollenado de datos si ya está en el historial
+        document.getElementById("carnet").addEventListener("change", function () {
             fetch("/buscar", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: "carnet=" + carnet
+                body: "carnet=" + this.value
             })
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
-                if (data.nombre) {
-                    document.getElementById("nombre").value = data.nombre;
-                    document.getElementById("chasis").value = data.chasis;
-                }
+                if (data.nombre) document.getElementById("nombre").value = data.nombre;
+                if (data.chasis) document.getElementById("chasis").value = data.chasis;
             });
-        }
-
-        function resetearCompras() {
-            const clave = document.getElementById("clave_reset").value;
-            if (clave === "1234") {
-                fetch("/resetear", { method: "POST" }).then(() => location.reload());
-            } else {
-                alert("Contraseña incorrecta");
-            }
-            return false;
-        }
+        });
     </script>
 </body>
 </html>
