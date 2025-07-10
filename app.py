@@ -37,7 +37,9 @@ def index():
 def buscar():
     carnet = request.form.get("carnet")
     cliente = next((c for c in historial if c["carnet"] == carnet), None)
-    return jsonify(cliente or {})
+    if cliente:
+        return jsonify(cliente)
+    return jsonify({})
 
 @app.route("/registrar", methods=["POST"])
 def registrar():
@@ -45,23 +47,29 @@ def registrar():
     nombre = request.form.get("nombre")
     chasis = request.form.get("chasis")
     tipo = request.form.get("tipo")
+
     if not carnet or not nombre or not chasis:
         return "<h2 style='font-size:1.5em; color:red;'>Faltan datos</h2>", 400
+
     for c in compras:
         if carnet == c["carnet"] and tipo == c["tipo"]:
             return "<h2 style='font-size:1.5em; color:orange;'>Ya compró combustible para este tipo de vehículo</h2>", 403
         if nombre == c["nombre"] or chasis == c["chasis"]:
             return "<h2 style='font-size:1.5em; color:orange;'>Datos ya registrados para otro vehículo</h2>", 403
+
     if any(chasis.endswith(r[-3:]) for r in motos_robadas):
         return "<h2 style='font-size:1.5em; color:red;'>Moto con denuncia de robo. Verificar documentos</h2>", 403
+
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     registro = {"carnet": carnet, "nombre": nombre, "chasis": chasis, "tipo": tipo, "fecha": fecha}
     compras.append(registro)
     historial.append(registro)
+
     with open(ARCHIVO_COMPRAS, "w") as f:
         json.dump(compras, f)
     with open(ARCHIVO_HISTORIAL, "w") as f:
         json.dump(historial, f)
+
     return redirect("/")
 
 @app.route("/admin", methods=["GET", "POST"])
@@ -79,14 +87,7 @@ def panel():
     if not session.get("admin"):
         return redirect(url_for("admin"))
     return render_template("admin_panel.html", registros=compras, config=config, motos=motos_robadas)
-    contador_motos = sum(1 for c in compras if c["tipo"] == "Motocicleta")
-    contador_autos = sum(1 for c in compras if c["tipo"] == "Automóvil")
-    total_motos = contador_motos * config["litros_moto"]
-    total_autos = contador_autos * config["litros_auto"]
-    return render_template("admin_panel.html", registros=compras, config=config,
-                           motos=motos_robadas, contador_motos=contador_motos,
-                           contador_autos=contador_autos, total_motos=total_motos,
-                           total_autos=total_autos)
+
 @app.route("/config", methods=["POST"])
 def actualizar_config():
     if not session.get("admin"):
@@ -108,5 +109,7 @@ def resetear():
         json.dump(compras, f)
     return ("", 204)
 
+# 👇 ESTA ES LA LÍNEA QUE CAMBIAMOS PARA RENDER 👇
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 5000))  # usa puerto que Render asigna
+    app.run(debug=True, host="0.0.0.0", port=port)
