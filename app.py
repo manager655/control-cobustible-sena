@@ -11,7 +11,6 @@ ARCHIVO_HISTORIAL = "historial.json"
 ARCHIVO_MOTOS_ROBADAS = "motos_robadas.json"
 ARCHIVO_CONFIG = "config.json"
 
-# Cargar o crear archivo JSON
 def cargar_o_crear(ruta, valor_defecto):
     if os.path.exists(ruta):
         with open(ruta, "r") as f:
@@ -38,9 +37,7 @@ def index():
 def buscar():
     carnet = request.form.get("carnet")
     cliente = next((c for c in historial if c["carnet"] == carnet), None)
-    if cliente:
-        return jsonify(cliente)
-    return jsonify({})
+    return jsonify(cliente or {})
 
 @app.route("/registrar", methods=["POST"])
 def registrar():
@@ -48,29 +45,23 @@ def registrar():
     nombre = request.form.get("nombre")
     chasis = request.form.get("chasis")
     tipo = request.form.get("tipo")
-
     if not carnet or not nombre or not chasis:
         return "<h2 style='font-size:1.5em; color:red;'>Faltan datos</h2>", 400
-
     for c in compras:
         if carnet == c["carnet"] and tipo == c["tipo"]:
             return "<h2 style='font-size:1.5em; color:orange;'>Ya compró combustible para este tipo de vehículo</h2>", 403
         if nombre == c["nombre"] or chasis == c["chasis"]:
             return "<h2 style='font-size:1.5em; color:orange;'>Datos ya registrados para otro vehículo</h2>", 403
-
     if any(chasis.endswith(r[-3:]) for r in motos_robadas):
         return "<h2 style='font-size:1.5em; color:red;'>Moto con denuncia de robo. Verificar documentos</h2>", 403
-
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     registro = {"carnet": carnet, "nombre": nombre, "chasis": chasis, "tipo": tipo, "fecha": fecha}
     compras.append(registro)
     historial.append(registro)
-
     with open(ARCHIVO_COMPRAS, "w") as f:
         json.dump(compras, f)
     with open(ARCHIVO_HISTORIAL, "w") as f:
         json.dump(historial, f)
-
     return redirect("/")
 
 @app.route("/admin", methods=["GET", "POST"])
