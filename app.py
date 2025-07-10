@@ -79,7 +79,14 @@ def panel():
     if not session.get("admin"):
         return redirect(url_for("admin"))
     return render_template("admin_panel.html", registros=compras, config=config, motos=motos_robadas)
-
+    contador_motos = sum(1 for c in compras if c["tipo"] == "Motocicleta")
+    contador_autos = sum(1 for c in compras if c["tipo"] == "Automóvil")
+    total_motos = contador_motos * config["litros_moto"]
+    total_autos = contador_autos * config["litros_auto"]
+    return render_template("admin_panel.html", registros=compras, config=config,
+                           motos=motos_robadas, contador_motos=contador_motos,
+                           contador_autos=contador_autos, total_motos=total_motos,
+                           total_autos=total_autos)
 @app.route("/config", methods=["POST"])
 def actualizar_config():
     if not session.get("admin"):
