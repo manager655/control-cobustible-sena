@@ -6,13 +6,12 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "clave_segura_para_admin"
 
-# Archivos JSON
 ARCHIVO_COMPRAS = "compras.json"
 ARCHIVO_HISTORIAL = "historial.json"
 ARCHIVO_MOTOS_ROBADAS = "motos_robadas.json"
 ARCHIVO_CONFIG = "config.json"
 
-# Cargar o crear archivo JSON si no existe
+# Cargar o crear archivo JSON
 def cargar_o_crear(ruta, valor_defecto):
     if os.path.exists(ruta):
         with open(ruta, "r") as f:
@@ -26,7 +25,6 @@ historial = cargar_o_crear(ARCHIVO_HISTORIAL, [])
 motos_robadas = cargar_o_crear(ARCHIVO_MOTOS_ROBADAS, [])
 config = cargar_o_crear(ARCHIVO_CONFIG, {"litros_moto": 5, "litros_auto": 10})
 
-# Página principal
 @app.route("/")
 def index():
     contador_motos = sum(1 for c in compras if c["tipo"] == "Motocicleta")
@@ -36,7 +34,6 @@ def index():
     return render_template("index.html", contador_motos=contador_motos, contador_autos=contador_autos,
                            total_motos=total_motos, total_autos=total_autos)
 
-# Autollenado de nombre y chasis si ya compró antes
 @app.route("/buscar", methods=["POST"])
 def buscar():
     carnet = request.form.get("carnet")
@@ -45,7 +42,6 @@ def buscar():
         return jsonify(cliente)
     return jsonify({})
 
-# Registro de compra
 @app.route("/registrar", methods=["POST"])
 def registrar():
     carnet = request.form.get("carnet")
@@ -54,16 +50,16 @@ def registrar():
     tipo = request.form.get("tipo")
 
     if not carnet or not nombre or not chasis:
-        return "Faltan datos", 400
+        return "<h2 style='font-size:1.5em; color:red;'>Faltan datos</h2>", 400
 
     for c in compras:
         if carnet == c["carnet"] and tipo == c["tipo"]:
-            return "Ya compró combustible para este tipo de vehículo", 403
+            return "<h2 style='font-size:1.5em; color:orange;'>Ya compró combustible para este tipo de vehículo</h2>", 403
         if nombre == c["nombre"] or chasis == c["chasis"]:
-            return "Datos ya registrados para otro vehículo", 403
+            return "<h2 style='font-size:1.5em; color:orange;'>Datos ya registrados para otro vehículo</h2>", 403
 
     if any(chasis.endswith(r[-3:]) for r in motos_robadas):
-        return "Moto con denuncia de robo. Verificar documentos", 403
+        return "<h2 style='font-size:1.5em; color:red;'>Moto con denuncia de robo. Verificar documentos</h2>", 403
 
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     registro = {"carnet": carnet, "nombre": nombre, "chasis": chasis, "tipo": tipo, "fecha": fecha}
@@ -75,9 +71,8 @@ def registrar():
     with open(ARCHIVO_HISTORIAL, "w") as f:
         json.dump(historial, f)
 
-    return "Registrado", 200
+    return redirect("/")
 
-# Login del admin
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
@@ -88,25 +83,12 @@ def admin():
         return render_template("admin_login.html", error="Contraseña incorrecta")
     return render_template("admin_login.html")
 
-# Panel del admin protegido
 @app.route("/panel")
 def panel():
     if not session.get("admin"):
         return redirect(url_for("admin"))
     return render_template("admin_panel.html", registros=compras, config=config, motos=motos_robadas)
 
-# Eliminar un registro
-@app.route("/eliminar/<int:indice>")
-def eliminar(indice):
-    if not session.get("admin"):
-        return redirect(url_for("admin"))
-    if 0 <= indice < len(compras):
-        compras.pop(indice)
-        with open(ARCHIVO_COMPRAS, "w") as f:
-            json.dump(compras, f)
-    return redirect(url_for("index", exito=1))
-
-# Actualizar litros configurados
 @app.route("/config", methods=["POST"])
 def actualizar_config():
     if not session.get("admin"):
@@ -118,13 +100,15 @@ def actualizar_config():
         config["litros_auto"] = litros_auto
         with open(ARCHIVO_CONFIG, "w") as f:
             json.dump(config, f)
-    return redirect(url_for("index", exito=1))
+    return redirect(url_for("panel"))
 
-# Cerrar sesión del admin
-@app.route("/logout")
-def logout():
-    session.pop("admin", None)
-    return redirect(url_for("index"))
+@app.route("/resetear", methods=["POST"])
+def resetear():
+    global compras
+    compras = []
+    with open(ARCHIVO_COMPRAS, "w") as f:
+        json.dump(compras, f)
+    return ("", 204)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=10000)
