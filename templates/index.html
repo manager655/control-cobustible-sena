@@ -1,10 +1,8 @@
 # app.py — Sistema web de control de combustible para un solo puesto de venta
-from flask import Flask, render_template, request, redirect, jsonify, session, url_for, send_file
+from flask import Flask, render_template, request, redirect, jsonify, session, url_for
 import json
 import os
 from datetime import datetime
-from io import BytesIO
-from fpdf import FPDF
 
 app = Flask(__name__)
 app.secret_key = "clave_segura_para_admin"
@@ -53,16 +51,16 @@ def registrar():
     tipo = request.form.get("tipo")
 
     if not carnet or not nombre or not chasis:
-        return "Faltan datos", 400
+        return "<h2 style='font-size:1.5em; color:red;'>Faltan datos</h2>", 400
 
     for c in compras:
         if carnet == c["carnet"] and tipo == c["tipo"]:
-            return "Ya compró combustible para este tipo de vehículo", 403
+            return "<h2 style='font-size:1.5em; color:orange;'>Ya compró combustible para este tipo de vehículo</h2>", 403
         if nombre == c["nombre"] or chasis == c["chasis"]:
-            return "Datos ya registrados para otro vehículo", 403
+            return "<h2 style='font-size:1.5em; color:orange;'>Datos ya registrados para otro vehículo</h2>", 403
 
     if any(chasis.endswith(r[-3:]) for r in motos_robadas):
-        return "Moto con denuncia de robo. Verificar documentos", 403
+        return "<h2 style='font-size:1.5em; color:red;'>Moto con denuncia de robo. Verificar documentos</h2>", 403
 
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     registro = {"carnet": carnet, "nombre": nombre, "chasis": chasis, "tipo": tipo, "fecha": fecha}
@@ -74,7 +72,7 @@ def registrar():
     with open(ARCHIVO_HISTORIAL, "w") as f:
         json.dump(historial, f)
 
-    return "Registrado", 200
+    return redirect("/")
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
@@ -90,22 +88,7 @@ def admin():
 def panel():
     if not session.get("admin"):
         return redirect(url_for("admin"))
-    contador_motos = sum(1 for c in compras if c["tipo"] == "Motocicleta")
-    contador_autos = sum(1 for c in compras if c["tipo"] == "Automóvil")
-    total_motos = contador_motos * config["litros_moto"]
-    total_autos = contador_autos * config["litros_auto"]
-    return render_template("admin_panel.html", registros=compras, config=config, motos=motos_robadas,
-                           total_motos=total_motos, total_autos=total_autos)
-
-@app.route("/eliminar/<int:indice>")
-def eliminar(indice):
-    if not session.get("admin"):
-        return redirect(url_for("admin"))
-    if 0 <= indice < len(compras):
-        compras.pop(indice)
-        with open(ARCHIVO_COMPRAS, "w") as f:
-            json.dump(compras, f)
-    return redirect(url_for("panel"))
+    return render_template("admin_panel.html", registros=compras, config=config, motos=motos_robadas)
 
 @app.route("/config", methods=["POST"])
 def actualizar_config():
@@ -120,35 +103,19 @@ def actualizar_config():
             json.dump(config, f)
     return redirect(url_for("panel"))
 
-@app.route("/reset", methods=["POST"])
-def resetear_periodo():
-    if not session.get("admin"):
-        return redirect(url_for("admin"))
-    contraseña = request.form.get("clave_reset")
-    if contraseña == "1234":
-        compras.clear()
-        with open(ARCHIVO_COMPRAS, "w") as f:
-            json.dump(compras, f)
-    return redirect(url_for("panel"))
+@app.route("/resetear", methods=["POST"])
+def resetear():
+    global compras
+    compras = []
+    with open(ARCHIVO_COMPRAS, "w") as f:
+        json.dump(compras, f)
+    return ("", 204)
+   {% if request.args.get("exito") %}
+    <div style="background: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border: 1px solid #c3e6cb; border-radius: 5px; font-size: 1.2em;">
+        ✅ Registro exitoso. Ya puede registrar otro vehículo.
+    </div>
+{% endif %}
 
-@app.route("/descargar_pdf")
-def descargar_pdf():
-    if not session.get("admin"):
-        return redirect(url_for("admin"))
-
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Lista de compras de combustible", ln=True, align="C")
-
-    for i, c in enumerate(compras, 1):
-        linea = f"{i}. {c['fecha']} - {c['carnet']} - {c['nombre']} - {c['chasis']} - {c['tipo']}"
-        pdf.cell(200, 10, txt=linea, ln=True)
-
-    output = BytesIO()
-    pdf.output(output)
-    output.seek(0)
-    return send_file(output, download_name="compras.pdf", as_attachment=True)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=10000)

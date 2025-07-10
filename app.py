@@ -104,7 +104,7 @@ def eliminar(indice):
         compras.pop(indice)
         with open(ARCHIVO_COMPRAS, "w") as f:
             json.dump(compras, f)
-    return redirect(url_for("panel"))
+    return redirect(url_for("index", exito=1))
 
 # Actualizar litros configurados
 @app.route("/config", methods=["POST"])
@@ -118,7 +118,7 @@ def actualizar_config():
         config["litros_auto"] = litros_auto
         with open(ARCHIVO_CONFIG, "w") as f:
             json.dump(config, f)
-    return redirect(url_for("panel"))
+    return redirect(url_for("index", exito=1))
 
 # Cerrar sesión del admin
 @app.route("/logout")
